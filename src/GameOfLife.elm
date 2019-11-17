@@ -9,15 +9,16 @@ import Random
 import Random.Extra
 
 import Grid
+import ListUtil
 
 
 
 -- CONSTANTS
 
-gridWidth : Grid.Width
+gridWidth : Int
 gridWidth = 60
 
-gridHeight : Grid.Height
+gridHeight : Int
 gridHeight = 60
 
 
@@ -76,21 +77,17 @@ subscriptions model =
 -- VIEW
 
 renderCell : Grid.Cell -> Html Msg
-renderCell cell =
+renderCell isAlive =
   let
-    cellColor = if cell then "black" else "#EEE"
+    cellColor = if isAlive then "black" else "#EEE"
   in
     Html.td [ Attr.style "padding" "0.25em"
             , Attr.style "background-color" cellColor
             ] []
 
-renderRow : Grid.Row -> Html Msg
+renderRow : List Grid.Cell -> Html Msg
 renderRow row =
-  Html.tr []
-  ( row
-    |> Array.map renderCell
-    |> Array.toList
-  )
+  Html.tr [] (List.map renderCell row)
 
 toTable : Grid.Grid -> Html Msg
 toTable grid =
@@ -98,9 +95,10 @@ toTable grid =
     [ Attr.style "font-family" "monospace"
     , Attr.style "margin" "auto"
     ]
-    ( grid
-      |> Array.map renderRow
+    ( grid.cells
       |> Array.toList
+      |> ListUtil.subdivideList grid.width
+      |> List.map renderRow
     )
 
 view : Grid.Grid -> Html Msg
