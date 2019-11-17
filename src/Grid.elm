@@ -1,6 +1,7 @@
 module Grid exposing
   ( Cell
   , Grid
+  , fromArray
   , fromList
   , makeEmpty
   , random
@@ -8,6 +9,8 @@ module Grid exposing
   )
 
 import Array
+import Random
+import Random.Array
 import Random.Extra
 
 import ListUtil
@@ -34,10 +37,13 @@ makeEmpty width height =
   in
     Grid width (Array.repeat cellCount False)
 
+random : Int -> Int -> Random.Generator (Array.Array Bool)
 random width height =
-  Random.Extra.bool
-    |> List.repeat (width * height)
-    |> Random.Extra.sequence
+  let
+    count =
+      width * height
+  in
+    Random.Array.array count Random.Extra.bool
 
 toIndex : (Int, Int) -> Grid -> Int
 toIndex (x, y) grid =

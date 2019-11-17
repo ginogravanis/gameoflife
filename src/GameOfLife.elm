@@ -15,10 +15,10 @@ import ListUtil
 -- CONSTANTS
 
 gridWidth : Int
-gridWidth = 60
+gridWidth = 110
 
 gridHeight : Int
-gridHeight = 60
+gridHeight = 90
 
 
 -- MAIN
@@ -45,7 +45,7 @@ init _ =
 
 type Msg
   = NewGridRequested
-  | MakeGrid (List Grid.Cell)
+  | MakeGrid (Array.Array Grid.Cell)
   | Tick
 
 update : Msg -> Grid.Grid -> (Grid.Grid, Cmd Msg)
@@ -56,7 +56,7 @@ update msg grid =
       , Random.generate MakeGrid (Grid.random gridWidth gridHeight)
       )
     MakeGrid cells ->
-      (Grid.fromList gridWidth cells, Cmd.none)
+      (Grid.fromArray gridWidth cells, Cmd.none)
     Tick ->
       (Grid.evolve grid, Cmd.none)
 
