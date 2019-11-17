@@ -58,7 +58,7 @@ update msg grid =
     MakeGrid cells ->
       (Grid.fromList gridWidth cells, Cmd.none)
     Tick ->
-      (grid, Cmd.none)
+      (Grid.evolve grid, Cmd.none)
 
 
 -- SUBSCRIPTIONS
