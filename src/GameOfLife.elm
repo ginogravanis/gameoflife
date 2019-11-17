@@ -6,7 +6,6 @@ import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
 import Random
-import Random.Extra
 
 import Grid
 import ListUtil
@@ -54,10 +53,7 @@ update msg grid =
   case msg of
     NewGridRequested ->
       ( grid
-      , Random.Extra.bool
-        |> List.repeat (gridWidth * gridHeight)
-        |> Random.Extra.sequence
-        |> Random.generate MakeGrid
+      , Random.generate MakeGrid (Grid.random gridWidth gridHeight)
       )
     MakeGrid cells ->
       (Grid.fromList gridWidth cells, Cmd.none)
