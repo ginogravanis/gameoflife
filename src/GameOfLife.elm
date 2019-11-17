@@ -60,9 +60,7 @@ update msg grid =
         |> Random.generate MakeGrid
       )
     MakeGrid cells ->
-      Grid.fromList gridWidth gridHeight cells
-        |> Maybe.withDefault grid
-        |> \newGrid -> (newGrid, Cmd.none)
+      (Grid.fromList gridWidth cells, Cmd.none)
     Tick ->
       (grid, Cmd.none)
 

@@ -16,30 +16,23 @@ import ListUtil
 type alias Cell = Bool
 type alias Grid =
   { width : Int
-  , height : Int
   , cells : Array.Array Cell
   }
 
 
-fromArray : Int -> Int -> Array.Array Cell -> Maybe Grid
-fromArray width height cells =
-    if
-      Array.length cells == width * height
-    then
-      Just (Grid width height cells)
-    else
-      Nothing
+fromArray : Int -> Array.Array Cell -> Grid
+fromArray = Grid
 
-fromList : Int -> Int -> List Cell -> Maybe Grid
-fromList width height cells =
-  fromArray width height (Array.fromList cells)
+fromList : Int -> List Cell -> Grid
+fromList width cells =
+  fromArray width (Array.fromList cells)
 
 makeEmpty : Int -> Int -> Grid
 makeEmpty width height = 
   let
     cellCount = width * height
   in
-    Grid width height (Array.repeat cellCount False)
+    Grid width (Array.repeat cellCount False)
 
 toIndex : Int -> Int -> Grid -> Int
 toIndex x y grid =
@@ -58,7 +51,7 @@ setCellAt x y grid isAlive =
     index = toIndex x y grid
     newCells = Array.set index isAlive grid.cells
   in
-    Grid grid.width grid.height newCells
+    Grid grid.width newCells
 
 flipCell : Cell -> Cell
 flipCell = not
