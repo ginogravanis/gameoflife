@@ -6,6 +6,7 @@ import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
 import Random
+import Time
 
 import Grid
 import ListUtil
@@ -34,9 +35,20 @@ main =
 
 -- MODEL
 
-init : () -> (Grid.Grid, Cmd Msg)
+type RunState
+  = Running
+  | Stopped
+
+type alias Model =
+    { grid : Grid.Grid
+    , runState : RunState
+    }
+
+init : () -> (Model, Cmd Msg)
 init _ = 
-  ( Grid.makeEmpty gridWidth gridHeight
+  ( { grid = Grid.makeEmpty gridWidth gridHeight
+    , runState = Stopped
+    }
   , Cmd.none
   )
 
@@ -46,26 +58,50 @@ init _ =
 type Msg
   = NewGridRequested
   | MakeGrid (Array.Array Grid.Cell)
-  | Tick
+  | StartButtonPressed
+  | StopButtonPressed
+  | Tick Time.Posix
 
-update : Msg -> Grid.Grid -> (Grid.Grid, Cmd Msg)
-update msg grid =
+update : Msg -> Model -> (Model, Cmd Msg)
+update msg model =
   case msg of
     NewGridRequested ->
-      ( grid
+      ( model
       , Random.generate MakeGrid (Grid.random gridWidth gridHeight)
       )
     MakeGrid cells ->
-      (Grid.fromArray gridWidth cells, Cmd.none)
-    Tick ->
-      (Grid.evolve grid, Cmd.none)
+      ( { grid = Grid.fromArray gridWidth cells
+        , runState = Stopped
+        }
+      , Cmd.none
+      )
+    StartButtonPressed ->
+        ( { model | runState = Running }
+        , Cmd.none
+        )
+    StopButtonPressed ->
+        ( { model | runState = Stopped }
+        , Cmd.none
+        )
+    Tick _ ->
+      case model.runState of
+        Running ->
+          ( { model | grid = Grid.evolve model.grid }
+          , Cmd.none
+          )
+        Stopped ->
+          (model, Cmd.none)
 
 
 -- SUBSCRIPTIONS
 
-subscriptions : Grid.Grid -> Sub Msg
+subscriptions : Model -> Sub Msg
 subscriptions model =
-  Sub.none
+  case model.runState of
+    Running ->
+      Time.every 100 Tick
+    Stopped ->
+      Sub.none
 
 
 -- VIEW
@@ -95,8 +131,8 @@ toTable grid =
       |> List.map renderRow
     )
 
-view : Grid.Grid -> Html Msg
-view grid =
+view : Model -> Html Msg
+view { grid, runState } =
   Html.div []
     [ Html.h1 [ Attr.style "text-align" "center" ]
       [ Html.text "Game of Life" ]
@@ -106,9 +142,26 @@ view grid =
                     , Events.onClick NewGridRequested
                     ]
         [ Html.text "New" ]
-      , Html.button [ Events.onClick Tick ]
-        [ Html.text "Tick" ]
+      , ( startStopButton runState )
       ]
     , Html.div [ Attr.style "margin" "auto" ]
       [ toTable grid ]
     ]
+
+startStopButton : RunState -> Html Msg
+startStopButton runState  = 
+  case runState of
+    Stopped ->
+      startButton
+    Running ->
+      stopButton
+
+startButton : Html Msg
+startButton =
+  Html.button [ Events.onClick StartButtonPressed ]
+    [ Html.text "Start" ]
+
+stopButton : Html Msg
+stopButton =
+  Html.button [ Events.onClick StopButtonPressed ]
+    [ Html.text "Stop" ]
