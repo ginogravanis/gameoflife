@@ -98,14 +98,9 @@ update msg model =
             )
 
         Tick _ ->
-            case model.runState of
-                Running ->
-                    ( { model | grid = Grid.evolve model.grid }
-                    , Cmd.none
-                    )
-
-                Stopped ->
-                    ( model, Cmd.none )
+            ( { model | grid = Grid.evolve model.grid }
+            , Cmd.none
+            )
 
 
 
