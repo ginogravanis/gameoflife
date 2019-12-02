@@ -42,21 +42,21 @@ main =
 -- MODEL
 
 
-type RunState
+type SimulationState
     = Running
     | Stopped
 
 
 type alias Model =
     { grid : Grid.Grid
-    , runState : RunState
+    , simulationState : SimulationState
     }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
     ( { grid = Grid.makeEmpty gridWidth gridHeight
-      , runState = Stopped
+      , simulationState = Stopped
       }
     , Cmd.none
     )
@@ -88,12 +88,12 @@ update msg model =
             )
 
         StartButtonPressed ->
-            ( { model | runState = Running }
+            ( { model | simulationState = Running }
             , Cmd.none
             )
 
         StopButtonPressed ->
-            ( { model | runState = Stopped }
+            ( { model | simulationState = Stopped }
             , Cmd.none
             )
 
@@ -109,7 +109,7 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    case model.runState of
+    case model.simulationState of
         Running ->
             Time.every 100 Tick
 
@@ -157,7 +157,7 @@ toTable grid =
 
 
 view : Model -> Html Msg
-view { grid, runState } =
+view { grid, simulationState } =
     Html.div []
         [ Html.h1 [ Attr.style "text-align" "center" ]
             [ Html.text "Game of Life" ]
@@ -170,16 +170,16 @@ view { grid, runState } =
                 , Events.onClick NewGridRequested
                 ]
                 [ Html.text "New" ]
-            , startStopButton runState
+            , startStopButton simulationState
             ]
         , Html.div [ Attr.style "margin" "auto" ]
             [ toTable grid ]
         ]
 
 
-startStopButton : RunState -> Html Msg
-startStopButton runState =
-    case runState of
+startStopButton : SimulationState -> Html Msg
+startStopButton simulationState =
+    case simulationState of
         Stopped ->
             startButton
 
