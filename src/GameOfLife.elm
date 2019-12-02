@@ -2,26 +2,26 @@ module GameOfLife exposing (main)
 
 import Array
 import Browser
-import Grid
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
 import ListUtil
 import Random
 import Time
+import World
 
 
 
 -- CONSTANTS
 
 
-gridWidth : Int
-gridWidth =
+worldWidth : Int
+worldWidth =
     110
 
 
-gridHeight : Int
-gridHeight =
+worldHeight : Int
+worldHeight =
     90
 
 
@@ -48,14 +48,14 @@ type SimulationState
 
 
 type alias Model =
-    { grid : Grid.Grid
+    { world : World.Model
     , simulationState : SimulationState
     }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { grid = Grid.makeEmpty gridWidth gridHeight
+    ( { world = World.makeEmpty worldWidth worldHeight
       , simulationState = Stopped
       }
     , Cmd.none
@@ -67,8 +67,8 @@ init _ =
 
 
 type Msg
-    = NewGridRequested
-    | MakeGrid (Array.Array Grid.Cell)
+    = NewWorldRequested
+    | MakeWorld (Array.Array World.Cell)
     | StartButtonPressed
     | StopButtonPressed
     | Tick Time.Posix
@@ -77,13 +77,13 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        NewGridRequested ->
+        NewWorldRequested ->
             ( model
-            , Random.generate MakeGrid (Grid.random gridWidth gridHeight)
+            , Random.generate MakeWorld (World.random worldWidth worldHeight)
             )
 
-        MakeGrid cells ->
-            ( { model | grid = Grid.fromArray gridWidth cells }
+        MakeWorld cells ->
+            ( { model | world = World.fromArray worldWidth cells }
             , Cmd.none
             )
 
@@ -98,7 +98,7 @@ update msg model =
             )
 
         Tick _ ->
-            ( { model | grid = Grid.evolve model.grid }
+            ( { model | world = World.evolve model.world }
             , Cmd.none
             )
 
@@ -121,7 +121,7 @@ subscriptions model =
 -- VIEW
 
 
-renderCell : Grid.Cell -> Html Msg
+renderCell : World.Cell -> Html Msg
 renderCell isAlive =
     let
         cellColor =
@@ -138,26 +138,26 @@ renderCell isAlive =
         []
 
 
-renderRow : List Grid.Cell -> Html Msg
+renderRow : List World.Cell -> Html Msg
 renderRow row =
     Html.tr [] (List.map renderCell row)
 
 
-toTable : Grid.Grid -> Html Msg
-toTable grid =
+toTable : World.Model -> Html Msg
+toTable world =
     Html.table
         [ Attr.style "font-family" "monospace"
         , Attr.style "margin" "auto"
         ]
-        (grid.cells
+        (world.cells
             |> Array.toList
-            |> ListUtil.subdivideList grid.width
+            |> ListUtil.subdivideList world.width
             |> List.map renderRow
         )
 
 
 view : Model -> Html Msg
-view { grid, simulationState } =
+view { world, simulationState } =
     Html.div []
         [ Html.h1 [ Attr.style "text-align" "center" ]
             [ Html.text "Game of Life" ]
@@ -167,13 +167,13 @@ view { grid, simulationState } =
             ]
             [ Html.button
                 [ Attr.style "margin-right" "1ex"
-                , Events.onClick NewGridRequested
+                , Events.onClick NewWorldRequested
                 ]
                 [ Html.text "New" ]
             , startStopButton simulationState
             ]
         , Html.div [ Attr.style "margin" "auto" ]
-            [ toTable grid ]
+            [ toTable world ]
         ]
 
 

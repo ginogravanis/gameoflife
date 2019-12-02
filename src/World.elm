@@ -1,6 +1,6 @@
-module Grid exposing
+module World exposing
     ( Cell
-    , Grid
+    , Model
     , evolve
     , fromArray
     , fromList
@@ -19,29 +19,29 @@ type alias Cell =
     Bool
 
 
-type alias Grid =
+type alias Model =
     { width : Int
     , cells : Array.Array Cell
     }
 
 
-fromArray : Int -> Array.Array Cell -> Grid
+fromArray : Int -> Array.Array Cell -> Model
 fromArray =
-    Grid
+    Model
 
 
-fromList : Int -> List Cell -> Grid
+fromList : Int -> List Cell -> Model
 fromList width cells =
     fromArray width (Array.fromList cells)
 
 
-makeEmpty : Int -> Int -> Grid
+makeEmpty : Int -> Int -> Model
 makeEmpty width height =
     let
         cellCount =
             width * height
     in
-    Grid width (Array.repeat cellCount False)
+    Model width (Array.repeat cellCount False)
 
 
 random : Int -> Int -> Random.Generator (Array.Array Bool)
@@ -53,37 +53,37 @@ random width height =
     Random.Array.array count Random.Extra.bool
 
 
-toIndex : ( Int, Int ) -> Grid -> Int
-toIndex ( x, y ) grid =
-    (y * grid.width) + x
+toIndex : ( Int, Int ) -> Model -> Int
+toIndex ( x, y ) model =
+    (y * model.width) + x
 
 
-toCoordinates : Grid -> Int -> ( Int, Int )
-toCoordinates grid index =
-    ( modBy grid.width index
-    , index // grid.width
+toCoordinates : Model -> Int -> ( Int, Int )
+toCoordinates model index =
+    ( modBy model.width index
+    , index // model.width
     )
 
 
-getCellAt : Grid -> ( Int, Int ) -> Maybe Cell
-getCellAt grid ( x, y ) =
+getCellAt : Model -> ( Int, Int ) -> Maybe Cell
+getCellAt model ( x, y ) =
     let
         index =
-            toIndex ( x, y ) grid
+            toIndex ( x, y ) model
     in
-    Array.get index grid.cells
+    Array.get index model.cells
 
 
-setCellAt : Grid -> ( Int, Int ) -> Cell -> Grid
-setCellAt grid ( x, y ) isAlive =
+setCellAt : Model -> ( Int, Int ) -> Cell -> Model
+setCellAt model ( x, y ) isAlive =
     let
         index =
-            toIndex ( x, y ) grid
+            toIndex ( x, y ) model
 
         newCells =
-            Array.set index isAlive grid.cells
+            Array.set index isAlive model.cells
     in
-    Grid grid.width newCells
+    Model model.width newCells
 
 
 flipCell : Cell -> Cell
@@ -91,42 +91,42 @@ flipCell =
     not
 
 
-flipCellAt : Grid -> ( Int, Int ) -> Grid
-flipCellAt grid ( x, y ) =
+flipCellAt : Model -> ( Int, Int ) -> Model
+flipCellAt model ( x, y ) =
     let
         cell =
-            getCellAt grid ( x, y )
+            getCellAt model ( x, y )
     in
     cell
         |> Maybe.map flipCell
-        |> Maybe.map (setCellAt grid ( x, y ))
-        |> Maybe.withDefault grid
+        |> Maybe.map (setCellAt model ( x, y ))
+        |> Maybe.withDefault model
 
 
-evolve : Grid -> Grid
-evolve grid =
+evolve : Model -> Model
+evolve model =
     let
-        toGridCoords =
-            toCoordinates grid
+        toWorldCoords =
+            toCoordinates model
 
         enumeratedCells =
-            Array.toIndexedList grid.cells
+            Array.toIndexedList model.cells
 
         evolvehelp =
             \( index, cell ) ->
-                evolveCell grid (toGridCoords index) cell
+                evolveCell model (toWorldCoords index) cell
 
         newCells =
             List.map evolvehelp enumeratedCells
     in
-    fromList grid.width newCells
+    fromList model.width newCells
 
 
-evolveCell : Grid -> ( Int, Int ) -> Cell -> Cell
-evolveCell grid ( x, y ) cell =
+evolveCell : Model -> ( Int, Int ) -> Cell -> Cell
+evolveCell model ( x, y ) cell =
     let
         aliveNeighbours =
-            liveNeighbours grid ( x, y )
+            liveNeighbours model ( x, y )
     in
     if aliveNeighbours == 3 then
         True
@@ -138,8 +138,8 @@ evolveCell grid ( x, y ) cell =
         False
 
 
-liveNeighbours : Grid -> ( Int, Int ) -> Int
-liveNeighbours grid ( x, y ) =
+liveNeighbours : Model -> ( Int, Int ) -> Int
+liveNeighbours model ( x, y ) =
     let
         neighbourCoords =
             [ ( x, y - 1 )
@@ -161,7 +161,7 @@ liveNeighbours grid ( x, y ) =
                     0
     in
     neighbourCoords
-        |> List.map (getCellAt grid)
+        |> List.map (getCellAt model)
         |> List.map (Maybe.withDefault False)
         |> List.map toInt
         |> List.sum
