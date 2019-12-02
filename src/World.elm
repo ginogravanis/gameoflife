@@ -1,8 +1,9 @@
 module World exposing
-    ( Cell
+    ( Cell(..)
     , Model
     , evolve
     , fromArray
+    , fromBoolArray
     , fromList
     , makeEmpty
     , random
@@ -15,14 +16,29 @@ import Random.Array
 import Random.Extra
 
 
-type alias Cell =
-    Bool
+type Cell
+    = Dead
+    | Alive
 
 
 type alias Model =
     { width : Int
     , cells : Array.Array Cell
     }
+
+
+fromBool : Bool -> Cell
+fromBool isAlive =
+    if isAlive then
+        Alive
+
+    else
+        Dead
+
+
+fromBoolArray : Int -> Array.Array Bool -> Model
+fromBoolArray width bools =
+    fromArray width (Array.map fromBool bools)
 
 
 fromArray : Int -> Array.Array Cell -> Model
@@ -41,7 +57,7 @@ makeEmpty width height =
         cellCount =
             width * height
     in
-    Model width (Array.repeat cellCount False)
+    Model width (Array.repeat cellCount Dead)
 
 
 random : Int -> Int -> Random.Generator (Array.Array Bool)
@@ -75,20 +91,25 @@ getCellAt model ( x, y ) =
 
 
 setCellAt : Model -> ( Int, Int ) -> Cell -> Model
-setCellAt model ( x, y ) isAlive =
+setCellAt model ( x, y ) cell =
     let
         index =
             toIndex ( x, y ) model
 
         newCells =
-            Array.set index isAlive model.cells
+            Array.set index cell model.cells
     in
     Model model.width newCells
 
 
 flipCell : Cell -> Cell
-flipCell =
-    not
+flipCell cell =
+    case cell of
+        Dead ->
+            Alive
+
+        Alive ->
+            Dead
 
 
 flipCellAt : Model -> ( Int, Int ) -> Model
@@ -129,13 +150,13 @@ evolveCell model ( x, y ) cell =
             liveNeighbours model ( x, y )
     in
     if aliveNeighbours == 3 then
-        True
+        Alive
 
-    else if cell && aliveNeighbours == 2 then
-        True
+    else if (cell == Alive) && aliveNeighbours == 2 then
+        Alive
 
     else
-        False
+        Dead
 
 
 liveNeighbours : Model -> ( Int, Int ) -> Int
@@ -154,14 +175,14 @@ liveNeighbours model ( x, y ) =
 
         toInt cell =
             case cell of
-                True ->
+                Alive ->
                     1
 
-                False ->
+                Dead ->
                     0
     in
     neighbourCoords
         |> List.map (getCellAt model)
-        |> List.map (Maybe.withDefault False)
+        |> List.map (Maybe.withDefault Dead)
         |> List.map toInt
         |> List.sum

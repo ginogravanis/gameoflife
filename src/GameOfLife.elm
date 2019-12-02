@@ -68,7 +68,7 @@ init _ =
 
 type Msg
     = NewWorldRequested
-    | MakeWorld (Array.Array World.Cell)
+    | MakeWorld (Array.Array Bool)
     | StartButtonPressed
     | StopButtonPressed
     | Tick Time.Posix
@@ -82,8 +82,8 @@ update msg model =
             , Random.generate MakeWorld (World.random worldWidth worldHeight)
             )
 
-        MakeWorld cells ->
-            ( { model | world = World.fromArray worldWidth cells }
+        MakeWorld bools ->
+            ( { model | world = World.fromBoolArray worldWidth bools }
             , Cmd.none
             )
 
@@ -122,14 +122,15 @@ subscriptions model =
 
 
 renderCell : World.Cell -> Html Msg
-renderCell isAlive =
+renderCell cell =
     let
         cellColor =
-            if isAlive then
-                "black"
+            case cell of
+                World.Alive ->
+                    "black"
 
-            else
-                "#EEE"
+                World.Dead ->
+                    "#EEE"
     in
     Html.td
         [ Attr.style "padding" "0.25em"
