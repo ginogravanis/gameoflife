@@ -83,9 +83,7 @@ update msg model =
             )
 
         MakeGrid cells ->
-            ( { grid = Grid.fromArray gridWidth cells
-              , runState = Stopped
-              }
+            ( { model | grid = Grid.fromArray gridWidth cells }
             , Cmd.none
             )
 
