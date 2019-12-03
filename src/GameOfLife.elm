@@ -83,7 +83,7 @@ update msg model =
             )
 
         MakeWorld bools ->
-            ( { model | world = World.fromBoolArray worldWidth bools }
+            ( { model | world = World.fromBools worldWidth bools }
             , Cmd.none
             )
 

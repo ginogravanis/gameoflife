@@ -2,9 +2,7 @@ module World exposing
     ( Cell(..)
     , Model
     , evolve
-    , fromArray
-    , fromBoolArray
-    , fromList
+    , fromBools
     , makeEmpty
     , random
     )
@@ -36,19 +34,14 @@ fromBool isAlive =
         Dead
 
 
-fromBoolArray : Int -> Array.Array Bool -> Model
-fromBoolArray width bools =
-    fromArray width (Array.map fromBool bools)
+fromBools : Int -> Array.Array Bool -> Model
+fromBools width bools =
+    Model width (Array.map fromBool bools)
 
 
-fromArray : Int -> Array.Array Cell -> Model
-fromArray =
-    Model
-
-
-fromList : Int -> List Cell -> Model
-fromList width cells =
-    fromArray width (Array.fromList cells)
+fromCells : Int -> List Cell -> Model
+fromCells width cells =
+    Model width (Array.fromList cells)
 
 
 makeEmpty : Int -> Int -> Model
@@ -140,7 +133,7 @@ evolve model =
         newCells =
             List.map evolvehelp enumeratedCells
     in
-    fromList model.width newCells
+    fromCells model.width newCells
 
 
 evolveCell : Model -> ( Int, Int ) -> Cell -> Cell
