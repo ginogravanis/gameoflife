@@ -1,10 +1,11 @@
 module World exposing
     ( Cell(..)
     , Model
+    , Msg(..)
     , evolve
     , fromBools
-    , makeEmpty
-    , random
+    , init
+    , update
     )
 
 import Array
@@ -12,6 +13,7 @@ import ListUtil
 import Random
 import Random.Array
 import Random.Extra
+import Time
 
 
 
@@ -24,6 +26,25 @@ type alias Model =
     }
 
 
+type Msg
+    = NewRequested
+    | MakeWorld (Array.Array Bool)
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        NewRequested ->
+            ( model
+            , Random.generate MakeWorld (randomWorld (dimensions model))
+            )
+
+        MakeWorld bools ->
+            ( fromBools model.width bools
+            , Cmd.none
+            )
+
+
 fromBools : Int -> Array.Array Bool -> Model
 fromBools width bools =
     Model width (Array.map fromBool bools)
@@ -34,8 +55,8 @@ fromCells width cells =
     Model width (Array.fromList cells)
 
 
-makeEmpty : ( Int, Int ) -> Model
-makeEmpty ( width, height ) =
+init : ( Int, Int ) -> Model
+init ( width, height ) =
     let
         cellCount =
             width * height
@@ -43,8 +64,15 @@ makeEmpty ( width, height ) =
     Model width (Array.repeat cellCount Dead)
 
 
-random : ( Int, Int ) -> Random.Generator (Array.Array Bool)
-random ( width, height ) =
+dimensions : Model -> ( Int, Int )
+dimensions model =
+    ( model.width
+    , Array.length model.cells // model.width
+    )
+
+
+randomWorld : ( Int, Int ) -> Random.Generator (Array.Array Bool)
+randomWorld ( width, height ) =
     let
         count =
             width * height

@@ -6,7 +6,6 @@ import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
 import ListUtil
-import Random
 import Time
 import World
 
@@ -48,14 +47,14 @@ type SimulationState
 
 
 type alias Model =
-    { world : World.Model
-    , simulationState : SimulationState
+    { simulationState : SimulationState
+    , world : World.Model
     }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { world = World.makeEmpty ( worldWidth, worldHeight )
+    ( { world = World.init ( worldWidth, worldHeight )
       , simulationState = Stopped
       }
     , Cmd.none
@@ -67,26 +66,15 @@ init _ =
 
 
 type Msg
-    = NewWorldRequested
-    | MakeWorld (Array.Array Bool)
-    | StartButtonPressed
+    = StartButtonPressed
     | StopButtonPressed
     | Tick Time.Posix
+    | GotWorldMsg World.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        NewWorldRequested ->
-            ( model
-            , Random.generate MakeWorld (World.random ( worldWidth, worldHeight ))
-            )
-
-        MakeWorld bools ->
-            ( { model | world = World.fromBools worldWidth bools }
-            , Cmd.none
-            )
-
         StartButtonPressed ->
             ( { model | simulationState = Running }
             , Cmd.none
@@ -101,6 +89,17 @@ update msg model =
             ( { model | world = World.evolve model.world }
             , Cmd.none
             )
+
+        GotWorldMsg subMsg ->
+            World.update subMsg model.world
+                |> updateWith (Model model.simulationState) GotWorldMsg model
+
+
+updateWith : (subModel -> Model) -> (subMsg -> Msg) -> Model -> ( subModel, Cmd subMsg ) -> ( Model, Cmd Msg )
+updateWith toModel toMsg model ( subModel, subCmd ) =
+    ( toModel subModel
+    , Cmd.map toMsg subCmd
+    )
 
 
 
@@ -168,7 +167,7 @@ view { world, simulationState } =
             ]
             [ Html.button
                 [ Attr.style "margin-right" "1ex"
-                , Events.onClick NewWorldRequested
+                , Events.onClick (GotWorldMsg World.NewRequested)
                 ]
                 [ Html.text "New" ]
             , startStopButton simulationState
