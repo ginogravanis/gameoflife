@@ -55,7 +55,7 @@ type alias Model =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { world = World.makeEmpty worldWidth worldHeight
+    ( { world = World.makeEmpty ( worldWidth, worldHeight )
       , simulationState = Stopped
       }
     , Cmd.none
@@ -79,7 +79,7 @@ update msg model =
     case msg of
         NewWorldRequested ->
             ( model
-            , Random.generate MakeWorld (World.random worldWidth worldHeight)
+            , Random.generate MakeWorld (World.random ( worldWidth, worldHeight ))
             )
 
         MakeWorld bools ->

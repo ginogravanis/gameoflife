@@ -14,6 +14,14 @@ import Random.Array
 import Random.Extra
 
 
+type alias Index =
+    Int
+
+
+type Coords
+    = Coords Int Int
+
+
 type Cell
     = Dead
     | Alive
@@ -44,8 +52,8 @@ fromCells width cells =
     Model width (Array.fromList cells)
 
 
-makeEmpty : Int -> Int -> Model
-makeEmpty width height =
+makeEmpty : ( Int, Int ) -> Model
+makeEmpty ( width, height ) =
     let
         cellCount =
             width * height
@@ -53,8 +61,8 @@ makeEmpty width height =
     Model width (Array.repeat cellCount Dead)
 
 
-random : Int -> Int -> Random.Generator (Array.Array Bool)
-random width height =
+random : ( Int, Int ) -> Random.Generator (Array.Array Bool)
+random ( width, height ) =
     let
         count =
             width * height
@@ -62,32 +70,30 @@ random width height =
     Random.Array.array count Random.Extra.bool
 
 
-toIndex : ( Int, Int ) -> Model -> Int
-toIndex ( x, y ) model =
-    (y * model.width) + x
+toIndex : Coords -> Model -> Index
+toIndex (Coords x y) model =
+    y * model.width + x
 
 
-toCoordinates : Model -> Int -> ( Int, Int )
-toCoordinates model index =
-    ( modBy model.width index
-    , index // model.width
-    )
+toCoordinates : Model -> Index -> Coords
+toCoordinates model i =
+    Coords (modBy model.width i) (i // model.width)
 
 
-getCellAt : Model -> ( Int, Int ) -> Maybe Cell
-getCellAt model ( x, y ) =
+getCellAt : Model -> Coords -> Maybe Cell
+getCellAt model coords =
     let
         index =
-            toIndex ( x, y ) model
+            toIndex coords model
     in
     Array.get index model.cells
 
 
-setCellAt : Model -> ( Int, Int ) -> Cell -> Model
-setCellAt model ( x, y ) cell =
+setCellAt : Model -> Coords -> Cell -> Model
+setCellAt model coords cell =
     let
         index =
-            toIndex ( x, y ) model
+            toIndex coords model
 
         newCells =
             Array.set index cell model.cells
@@ -105,15 +111,15 @@ flipCell cell =
             Dead
 
 
-flipCellAt : Model -> ( Int, Int ) -> Model
-flipCellAt model ( x, y ) =
+flipCellAt : Model -> Coords -> Model
+flipCellAt model coords =
     let
         cell =
-            getCellAt model ( x, y )
+            getCellAt model coords
     in
     cell
         |> Maybe.map flipCell
-        |> Maybe.map (setCellAt model ( x, y ))
+        |> Maybe.map (setCellAt model coords)
         |> Maybe.withDefault model
 
 
@@ -136,11 +142,11 @@ evolve model =
     fromCells model.width newCells
 
 
-evolveCell : Model -> ( Int, Int ) -> Cell -> Cell
-evolveCell model ( x, y ) cell =
+evolveCell : Model -> Coords -> Cell -> Cell
+evolveCell model coords cell =
     let
         aliveNeighbours =
-            liveNeighbours model ( x, y )
+            liveNeighbours model coords
     in
     if aliveNeighbours == 3 then
         Alive
@@ -152,18 +158,18 @@ evolveCell model ( x, y ) cell =
         Dead
 
 
-liveNeighbours : Model -> ( Int, Int ) -> Int
-liveNeighbours model ( x, y ) =
+liveNeighbours : Model -> Coords -> Int
+liveNeighbours model (Coords x y) =
     let
         neighbourCoords =
-            [ ( x, y - 1 )
-            , ( x + 1, y - 1 )
-            , ( x + 1, y )
-            , ( x + 1, y + 1 )
-            , ( x, y + 1 )
-            , ( x - 1, y + 1 )
-            , ( x - 1, y )
-            , ( x - 1, y - 1 )
+            [ Coords x (y - 1)
+            , Coords (x + 1) (y - 1)
+            , Coords (x + 1) y
+            , Coords (x + 1) (y + 1)
+            , Coords x (y + 1)
+            , Coords (x - 1) (y + 1)
+            , Coords (x - 1) y
+            , Coords (x - 1) (y - 1)
             ]
 
         toInt cell =
