@@ -14,32 +14,14 @@ import Random.Array
 import Random.Extra
 
 
-type alias Index =
-    Int
 
-
-type Coords
-    = Coords Int Int
-
-
-type Cell
-    = Dead
-    | Alive
+-- Model
 
 
 type alias Model =
     { width : Int
     , cells : Array.Array Cell
     }
-
-
-fromBool : Bool -> Cell
-fromBool isAlive =
-    if isAlive then
-        Alive
-
-    else
-        Dead
 
 
 fromBools : Int -> Array.Array Bool -> Model
@@ -70,16 +52,6 @@ random ( width, height ) =
     Random.Array.array count Random.Extra.bool
 
 
-toIndex : Coords -> Model -> Index
-toIndex (Coords x y) model =
-    y * model.width + x
-
-
-toCoordinates : Model -> Index -> Coords
-toCoordinates model i =
-    Coords (modBy model.width i) (i // model.width)
-
-
 getCellAt : Model -> Coords -> Maybe Cell
 getCellAt model coords =
     let
@@ -99,16 +71,6 @@ setCellAt model coords cell =
             Array.set index cell model.cells
     in
     Model model.width newCells
-
-
-flipCell : Cell -> Cell
-flipCell cell =
-    case cell of
-        Dead ->
-            Alive
-
-        Alive ->
-            Dead
 
 
 flipCellAt : Model -> Coords -> Model
@@ -185,3 +147,53 @@ liveNeighbours model (Coords x y) =
         |> List.map (Maybe.withDefault Dead)
         |> List.map toInt
         |> List.sum
+
+
+
+-- Cell
+
+
+type Cell
+    = Dead
+    | Alive
+
+
+fromBool : Bool -> Cell
+fromBool isAlive =
+    if isAlive then
+        Alive
+
+    else
+        Dead
+
+
+flipCell : Cell -> Cell
+flipCell cell =
+    case cell of
+        Dead ->
+            Alive
+
+        Alive ->
+            Dead
+
+
+
+-- Coordinates
+
+
+type alias Index =
+    Int
+
+
+type Coords
+    = Coords Int Int
+
+
+toIndex : Coords -> Model -> Index
+toIndex (Coords x y) model =
+    y * model.width + x
+
+
+toCoordinates : Model -> Index -> Coords
+toCoordinates model i =
+    Coords (modBy model.width i) (i // model.width)
